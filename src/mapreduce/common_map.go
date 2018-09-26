@@ -1,7 +1,10 @@
 package mapreduce
 
 import (
+	"io/ioutil"
 	"hash/fnv"
+	"os"
+	"encoding/json"
 )
 
 func doMap(
@@ -53,8 +56,31 @@ func doMap(
 	//
 	// Your code here (Part I).
 	//
+	data, err := ioutil.ReadFile(inFile)
+	if err != nil {
+		panic("ReadFile err")
+	}
+
+	// output files
+	reduceFiles := make([]*os.File, nReduce)
+	for i := 0; i < nReduce; i++ {
+		name := reduceName(jobName, mapTask, i)
+		reduceFiles[i], _ = os.Create(name)
+		defer reduceFiles[i].Close()
+	}
+
+	pairs := mapF(inFile, string(data))
+	for _, p := range pairs {
+		mod := ihash(p.Key) % nReduce
+		enc := json.NewEncoder(reduceFiles[mod])
+		err := enc.Encode(p)
+		if err != nil {
+			panic("json.Encode error")
+		}
+	}
 }
 
+// 判断写到哪个 reduce 文件中
 func ihash(s string) int {
 	h := fnv.New32a()
 	h.Write([]byte(s))

@@ -97,6 +97,7 @@ func checkWorker(t *testing.T, l []int) {
 
 // Make input file
 func makeInputs(num int) []string {
+	// output: [824-mrinput-0.txt]
 	var names []string
 	var i = 0
 	for f := 0; f < num; f++ {
